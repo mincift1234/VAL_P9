@@ -134,7 +134,7 @@ async def 파티생성(interaction: discord.Interaction,
                 인원: int,
                 포지션: str,
                 게임모드: app_commands.Choice[str],
-                현재티어: Optional[app_commands.Choice[str]] = None):
+                현재티어: app_commands.Choice[str] = None):
 
     if not (2 <= 인원 <= 5):
         await interaction.response.send_message("❌ 인원수는 본인 포함 3~5명이어야 합니다.", ephemeral=True)
