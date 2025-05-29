@@ -34,14 +34,14 @@ async def on_ready():
     await bot.tree.sync()
     print(f"✅ Logged in as {bot.user}")
 
-# 참여 버튼 뷰 클래스
 class PartyJoinView(View):
-    def __init__(self, max_players: int, leader: discord.Member, 허용티어: List[str], 필수포지션: List[str]):
+    def __init__(self, max_players: int, leader: discord.Member, 허용티어: List[str], 필수포지션: List[str], 모드: str):
         super().__init__(timeout=None)
         self.max_players = max_players
         self.leader = leader
         self.허용티어 = 허용티어
         self.필수포지션 = 필수포지션
+        self.모드 = 모드
         self.players: List[discord.Member] = [leader]
         self.voice_channel = None
 
@@ -61,15 +61,17 @@ class PartyJoinView(View):
             return
 
         user_roles = [r.name for r in user.roles]
-        티어역할 = [t for t in self.허용티어 if t in user_roles]
-        포지션역할 = [p for p in self.필수포지션 if p in user_roles]
+        if self.모드 == "랭크":
+            티어역할 = [t for t in self.허용티어 if t in user_roles]
+            if not 티어역할:
+                await interaction.response.send_message("❌ 티어 조건이 맞지 않습니다.", ephemeral=True)
+                return
 
-        if not 티어역할:
-            await interaction.response.send_message("❌ 티어 조건이 맞지 않습니다.", ephemeral=True)
-            return
+        포지션역할 = [p for p in self.필수포지션 if p in user_roles]
         if not 포지션역할:
             await interaction.response.send_message("❌ 필요한 포지션이 아닙니다.", ephemeral=True)
             return
+
         if len(self.players) >= self.max_players:
             await interaction.response.send_message("❌ 인원이 이미 가득 찼습니다.", ephemeral=True)
             return
@@ -80,10 +82,9 @@ class PartyJoinView(View):
         await interaction.response.edit_message(view=self)
         await interaction.followup.send(f"✅ {user.mention}님이 파티에 참여했습니다!", ephemeral=True)
 
-        # 최대 인원 도달 시 음성 채널 생성
         if len(self.players) == self.max_players:
             guild = interaction.guild
-            category = discord.utils.get(guild.categories, name="랭크")
+            category = discord.utils.get(guild.categories, name=self.모드)
             if category:
                 overwrites = {guild.default_role: discord.PermissionOverwrite(connect=False)}
                 for member in self.players:
@@ -118,67 +119,23 @@ class PartyJoinView(View):
             except Exception:
                 pass
 
-# /등록 명령어
-@bot.tree.command(name="등록", description="티어 / 포지션 / 게임모드를 등록하고 역할을 부여합니다.")
-@app_commands.describe(
-    티어="티어 선택 (랭크일 경우 필수)",
-    포지션="자신의 포지션 선택",
-    게임모드="일반, 신속, 랭크, 스돌 중 선택"
-)
-@app_commands.choices(티어=티어옵션, 포지션=포지션옵션, 게임모드=모드옵션)
-async def 등록(interaction: discord.Interaction,
-              티어: app_commands.Choice[str],
-              포지션: app_commands.Choice[str],
-              게임모드: app_commands.Choice[str]):
-
-    await interaction.response.defer(ephemeral=True)
-    user = interaction.user
-    guild = interaction.guild
-
-    티어 = 티어.value
-    포지션 = 포지션.value
-    게임모드 = 게임모드.value
-
-    if 게임모드 == "랭크":
-        부여할역할 = [티어, 포지션, 게임모드]
-    else:
-        부여할역할 = [포지션, 게임모드]
-
-    모든역할 = 티어목록 + 포지션목록 + 모드목록
-    제거대상 = [
-        role for role in user.roles
-        if role.name in 모든역할 and role.position < guild.me.top_role.position
-    ]
-    if 제거대상:
-        await user.remove_roles(*제거대상)
-
-    역할들 = []
-    for 이름 in 부여할역할:
-        역할 = discord.utils.get(guild.roles, name=이름)
-        if 역할:
-            역할들.append(역할)
-
-    if 역할들:
-        await user.add_roles(*역할들)
-        await interaction.followup.send(f"✅ 역할 등록 완료: {', '.join(r.name for r in 역할들)}", ephemeral=True)
-    else:
-        await interaction.followup.send("❌ 역할을 찾을 수 없습니다. 관리자에게 문의하세요.", ephemeral=True)
-
 # /파티생성 명령어
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
 @app_commands.describe(
-    인원="파티 인원수 (2~5명)",
-    현재티어="본인의 현재 티어",
-    포지션="필요한 포지션들 (쉼표로 구분: 감시자,척후대)"
+    인원="파티 인원수 (3~5명)",
+    현재티어="본인의 현재 티어 (랭크일 경우만 사용)",
+    포지션="필요한 포지션들 (쉼표로 구분: 감시자,척후대)",
+    게임모드="일반, 신속, 랭크, 스돌 중 선택"
 )
-@app_commands.choices(현재티어=티어옵션)
+@app_commands.choices(현재티어=티어옵션, 게임모드=모드옵션)
 async def 파티생성(interaction: discord.Interaction,
                 인원: int,
                 현재티어: app_commands.Choice[str],
-                포지션: str):
+                포지션: str,
+                게임모드: app_commands.Choice[str]):
 
-    if not (2 <= 인원 <= 5):
-        await interaction.response.send_message("❌ 인원수는 2~5명 사이여야 합니다.", ephemeral=True)
+    if not (3 <= 인원 <= 5):
+        await interaction.response.send_message("❌ 인원수는 본인 제외 2~4명 (총 3~5명)이어야 합니다.", ephemeral=True)
         return
 
     포지션리스트 = [p.strip() for p in 포지션.split(",") if p.strip() in 포지션목록]
@@ -186,28 +143,36 @@ async def 파티생성(interaction: discord.Interaction,
         await interaction.response.send_message("❌ 유효한 포지션이 없습니다. 예: 감시자,전략가", ephemeral=True)
         return
 
-    기준티어 = 현재티어.value
-    허용티어 = get_허용티어(기준티어)
+    모드 = 게임모드.value
+
+    if 모드 == "랭크":
+        기준티어 = 현재티어.value
+        허용티어 = get_허용티어(기준티어)
+        조건텍스트 = f"🏆 티어 조건: {' / '.join(허용티어)}"
+    else:
+        허용티어 = []
+        조건텍스트 = "🏆 티어 조건 없음"
 
     embed = discord.Embed(
-        title="🎯 신규 파티 모집",
+        title=f"🎯 {모드} 모드 신규 파티 모집",
         description=f"""
 👤 리더: {interaction.user.mention}  
 👥 인원: {인원}명  
-🏆 티어 조건: {' / '.join(허용티어)}  
+{조건텍스트}  
 🎯 포지션: {', '.join(포지션리스트)}  
         """,
-        color=discord.Color.green()
+        color=discord.Color.blue()
     )
 
-    view = PartyJoinView(max_players=인원, leader=interaction.user, 허용티어=허용티어, 필수포지션=포지션리스트)
-    await interaction.response.send_message(embed=embed, view=view)
+    view = PartyJoinView(
+        max_players=인원,
+        leader=interaction.user,
+        허용티어=허용티어,
+        필수포지션=포지션리스트,
+        모드=모드
+    )
 
-# 수동 동기화 명령어
-@bot.tree.command(name="sync", description="명령어 수동 동기화")
-async def sync(interaction: discord.Interaction):
-    await bot.tree.sync()
-    await interaction.response.send_message("✅ 명령어 동기화 완료", ephemeral=True)
+    await interaction.response.send_message(embed=embed, view=view)
 
 # 봇 실행
 bot.run(TOKEN)
