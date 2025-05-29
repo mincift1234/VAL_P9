@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ui import View, Button
 from dotenv import load_dotenv
 import os
-from typing import List
+from typing import List, Optional
 
 # 환경 변수에서 토큰 불러오기
 load_dotenv()
@@ -124,20 +124,19 @@ class PartyJoinView(View):
 
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
 @app_commands.describe(
-    인원="파티 인원수 (2~5명)",
-    현재티어="본인의 현재 티어 (랭크일 경우만 사용)",
+    인원="파티 인원수 (본인 포함 2~5명)",
     포지션="필요한 포지션들 (쉼표로 구분: 감시자,척후대)",
     게임모드="일반, 신속, 랭크, 스돌 중 선택"
 )
-@app_commands.choices(현재티어=티어옵션, 게임모드=모드옵션)
+@app_commands.choices(게임모드=모드옵션)
 async def 파티생성(interaction: discord.Interaction,
                 인원: int,
-                현재티어: app_commands.Choice[str],
                 포지션: str,
-                게임모드: app_commands.Choice[str]):
+                게임모드: app_commands.Choice[str],
+                현재티어: Optional[app_commands.Choice[str]] = None):
 
     if not (2 <= 인원 <= 5):
-        await interaction.response.send_message("❌ 인원수는 본인 제외 2~4명 (총 3~5명)이어야 합니다.", ephemeral=True)
+        await interaction.response.send_message("❌ 인원수는 본인 포함 3~5명이어야 합니다.", ephemeral=True)
         return
 
     포지션리스트 = [p.strip() for p in 포지션.split(",") if p.strip() in 포지션목록]
@@ -148,6 +147,9 @@ async def 파티생성(interaction: discord.Interaction,
     모드 = 게임모드.value
 
     if 모드 == "랭크":
+        if 현재티어 is None:
+            await interaction.response.send_message("❌ 랭크 모드에서는 현재 티어를 지정해야 합니다.", ephemeral=True)
+            return
         기준티어 = 현재티어.value
         허용티어 = get_허용티어(기준티어)
         조건텍스트 = f"🏆 티어 조건: {' / '.join(허용티어)}"
