@@ -128,7 +128,7 @@ class PartyJoinView(View):
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
 @app_commands.describe(
     인원="파티 인원수 (본인 포함 2~5명)",
-    포지션="필요한 포지션들 (쉼표로 구분: 감시자,척후대)",
+    포지션="필요한 포지션들 (쉼표로 구분: 감시자,척후대/상관없음)",
     게임모드="일반, 신속, 랭크, 스돌 중 선택"
 )
 @app_commands.choices(게임모드=모드옵션)
