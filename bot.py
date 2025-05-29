@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # 티어 및 포지션 목록
 티어목록 = ['언랭', '브론즈', '실버', '골드', '플래티넘', '다이아몬드', '초월자', '불멸', '레디언트']
-포지션목록 = ['전략가', '타격대', '감시자', '척후대']
+포지션목록 = ['전략가', '타격대', '감시자', '척후대', '상관없음']
 모드목록 = ['일반', '신속', '랭크', '스돌']
 
 # 자동완성용 선택지
@@ -70,7 +70,7 @@ class PartyJoinView(View):
                 await interaction.response.send_message("❌ 티어 조건이 맞지 않습니다.", ephemeral=True)
                 return
 
-        포지션역할 = [p for p in self.필수포지션 if p in user_roles]
+        포지션역할 = [p for p in self.필수포지션 if p == '상관없음' or p in user_roles]
         if not 포지션역할:
             await interaction.response.send_message("❌ 필요한 포지션이 아닙니다.", ephemeral=True)
             return
