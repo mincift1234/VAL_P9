@@ -123,6 +123,7 @@ class PartyJoinView(View):
             except Exception:
                 pass
 
+@app_commands.choices(현재티어=티어옵션, 게임모드=모드옵션)
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
 @app_commands.describe(
     인원="파티 인원수 (본인 포함 2~5명)",
@@ -132,13 +133,13 @@ class PartyJoinView(View):
 @app_commands.choices(게임모드=모드옵션)
 async def 파티생성(interaction: discord.Interaction,
                 인원: int,
+                현재티어: typing.Optional[app_commands.Choice[str]],
                 포지션: str,
-                게임모드: app_commands.Choice[str],
-                현재티어: Optional[app_commands.Choice[str]] = None):
+                게임모드: app_commands.Choice[str]):
 
     if not (2 <= 인원 <= 5):
         await interaction.response.send_message("❌ 인원수는 본인 포함 3~5명이어야 합니다.", ephemeral=True)
-        returns
+        return
 
     포지션리스트 = [p.strip() for p in 포지션.split(",") if p.strip() in 포지션목록]
     if not 포지션리스트:
