@@ -7,8 +7,6 @@ import os
 from typing import List, Optional
 from keep_alive import keep_alive
 
-keep_alive()
-
 # 환경 변수에서 토큰 불러오기
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -180,6 +178,8 @@ async def 파티생성(interaction: discord.Interaction,
     )
 
     await interaction.response.send_message(embed=embed, view=view)
+
+keep_alive()
 
 # 봇 실행
 bot.run(TOKEN)
