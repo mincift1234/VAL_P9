@@ -104,20 +104,21 @@ class PartyJoinView(View):
                 await interaction.followup.send(f"📞 음성 채널이 생성되었습니다: {self.voice_channel.mention}", ephemeral=True)
 
     async def end_party(self, interaction: discord.Interaction):
-        if interaction.user != self.leader:
-            await interaction.response.send_message("❌ 리더만 종료할 수 있습니다.", ephemeral=True)
-            return
+    if interaction.user != self.leader:
+        await interaction.response.send_message("❌ 리더만 종료할 수 있습니다.", ephemeral=True)
+        return
 
-        await self.clear_party()
+    await self.clear_party()
+
+    try:
         await interaction.message.delete()
-        await interaction.response.send_message("🛑 파티가 종료되었습니다.", ephemeral=True)
+    except Exception:
+        pass
 
-    async def clear_party(self):
-        if self.voice_channel:
-            try:
-                await self.voice_channel.delete()
-            except Exception:
-                pass
+    try:
+        await interaction.response.send_message("🛑 파티가 종료되었습니다.", ephemeral=True)
+    except discord.NotFound:
+        await interaction.followup.send("🛑 파티가 종료되었습니다.", ephemeral=True)
 
 # /파티생성 명령어
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
