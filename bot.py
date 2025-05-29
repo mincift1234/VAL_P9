@@ -104,26 +104,27 @@ class PartyJoinView(View):
                 await interaction.followup.send(f"📞 음성 채널이 생성되었습니다: {self.voice_channel.mention}", ephemeral=True)
 
     async def end_party(self, interaction: discord.Interaction):
-    if interaction.user != self.leader:
-        await interaction.response.send_message("❌ 리더만 종료할 수 있습니다.", ephemeral=True)
-        return
+        if interaction.user != self.leader:
+            await interaction.response.send_message("❌ 리더만 종료할 수 있습니다.", ephemeral=True)
+            return
 
-    await self.clear_party()
-
-    try:
-        await interaction.message.delete()
-    except Exception:
-        pass
-
-    try:
+        await self.clear_party()
+        try:
+            await interaction.message.delete()
+        except Exception:
+            pass
         await interaction.response.send_message("🛑 파티가 종료되었습니다.", ephemeral=True)
-    except discord.NotFound:
-        await interaction.followup.send("🛑 파티가 종료되었습니다.", ephemeral=True)
 
-# /파티생성 명령어
+    async def clear_party(self):
+        if self.voice_channel:
+            try:
+                await self.voice_channel.delete()
+            except Exception:
+                pass
+
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
 @app_commands.describe(
-    인원="파티 인원수 (3~5명)",
+    인원="파티 인원수 (2~5명)",
     현재티어="본인의 현재 티어 (랭크일 경우만 사용)",
     포지션="필요한 포지션들 (쉼표로 구분: 감시자,척후대)",
     게임모드="일반, 신속, 랭크, 스돌 중 선택"
@@ -135,7 +136,7 @@ async def 파티생성(interaction: discord.Interaction,
                 포지션: str,
                 게임모드: app_commands.Choice[str]):
 
-    if not (3 <= 인원 <= 5):
+    if not (2 <= 인원 <= 5):
         await interaction.response.send_message("❌ 인원수는 본인 제외 2~4명 (총 3~5명)이어야 합니다.", ephemeral=True)
         return
 
