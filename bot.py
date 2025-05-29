@@ -134,11 +134,11 @@ async def 파티생성(interaction: discord.Interaction,
                 인원: int,
                 포지션: str,
                 게임모드: app_commands.Choice[str],
-                현재티어: Optional[app_commands.Choice[str]]):
+                현재티어: Optional[app_commands.Choice[str]] = None):
 
     if not (2 <= 인원 <= 5):
         await interaction.response.send_message("❌ 인원수는 본인 포함 3~5명이어야 합니다.", ephemeral=True)
-        return
+        returns
 
     포지션리스트 = [p.strip() for p in 포지션.split(",") if p.strip() in 포지션목록]
     if not 포지션리스트:
@@ -181,6 +181,31 @@ async def 파티생성(interaction: discord.Interaction,
     )
 
     await interaction.response.send_message(embed=embed, view=view)
+
+@bot.tree.command(name="역할생성", description="파티 기능에 필요한 티어/포지션/모드 역할들을 생성합니다.")
+async def 역할생성(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    guild = interaction.guild
+
+    생성된역할 = []
+
+    역할이름목록 = 티어목록 + 포지션목록 + 모드목록
+
+    for 이름 in 역할이름목록:
+        기존역할 = discord.utils.get(guild.roles, name=이름)
+        if not 기존역할:
+            try:
+                새역할 = await guild.create_role(name=이름)
+                생성된역할.append(새역할.name)
+            except Exception as e:
+                await interaction.followup.send(f"❌ `{이름}` 역할 생성 실패: {e}", ephemeral=True)
+                return
+
+    if 생성된역할:
+        await interaction.followup.send(f"✅ 다음 역할들이 생성되었습니다:\n`{', '.join(생성된역할)}`", ephemeral=True)
+    else:
+        await interaction.followup.send("ℹ️ 이미 모든 역할이 존재합니다.", ephemeral=True)
+
 
 keep_alive()
 
