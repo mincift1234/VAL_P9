@@ -133,7 +133,7 @@ class PartyJoinView(View):
 @app_commands.choices(게임모드=모드옵션)
 async def 파티생성(interaction: discord.Interaction,
                 인원: int,
-                현재티어: typing.Optional[app_commands.Choice[str]],
+                현재티어: Optional[app_commands.Choice[str]],
                 포지션: str,
                 게임모드: app_commands.Choice[str]):
 
@@ -209,6 +209,5 @@ async def 역할생성(interaction: discord.Interaction):
 
 
 keep_alive()
-
 # 봇 실행
 bot.run(TOKEN)
