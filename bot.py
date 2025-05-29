@@ -161,7 +161,7 @@ async def 파티생성(interaction: discord.Interaction,
         조건텍스트 = "🏆 티어 조건 없음"
 
     embed = discord.Embed(
-        title=f"🎯 {모드} 모드 신규 파티 모집",
+        title=f"🎯 {모드} 모드 파티 모집",
         description=f"""
 👤 리더: {interaction.user.mention}  
 👥 인원: {인원}명  
