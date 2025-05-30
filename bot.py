@@ -184,6 +184,7 @@ async def 파티생성(interaction: discord.Interaction,
     await interaction.response.send_message(embed=embed, view=view)
 
 @bot.tree.command(name="역할생성", description="파티 기능에 필요한 티어/포지션/모드 역할들을 생성합니다.")
+@app_commands.checks.has_permissions(administrator=True) #✅ 관리자 권한 체크
 async def 역할생성(interaction: discord.Interaction):
     guild = interaction.guild
     생성된역할 = []
