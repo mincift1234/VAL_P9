@@ -184,7 +184,7 @@ async def 파티생성(interaction: discord.Interaction,
     await interaction.response.send_message(embed=embed, view=view)
 
 @bot.tree.command(name="역할생성", description="파티 기능에 필요한 티어/포지션/모드 역할들을 생성합니다.")
-@app_commands.checks.has_permissions(administrator=True) #✅ 관리자 권한 체크
+@app_commands.checks.has_permissions(administrator=True)  # ✅ 관리자 권한 체크
 async def 역할생성(interaction: discord.Interaction):
     guild = interaction.guild
     생성된역할 = []
@@ -203,6 +203,17 @@ async def 역할생성(interaction: discord.Interaction):
         )
     else:
         await interaction.response.send_message("✅ 모든 역할이 이미 존재합니다.", ephemeral=True)
+
+# ❗ 관리자 권한이 없는 경우 에러 핸들링
+@역할생성.error
+async def 역할생성_error(interaction: discord.Interaction, error):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message(
+            "❌ 이 명령어는 관리자만 사용할 수 있습니다.",
+            ephemeral=True
+        )
+    else:
+        raise error
 
 keep_alive()
 # 봇 실행
