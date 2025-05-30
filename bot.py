@@ -35,6 +35,7 @@ async def on_ready():
     await bot.tree.sync()
     print(f"✅ Logged in as {bot.user}")
 
+party_views = {}
 class PartyJoinView(View):
     def __init__(self, max_players: int, leader: discord.Member, 허용티어: List[str], 필수포지션: List[str], 모드: str):
         super().__init__(timeout=None)
@@ -182,6 +183,7 @@ async def 파티생성(interaction: discord.Interaction,
     )
 
     await interaction.response.send_message(embed=embed, view=view)
+    party_views[interaction.channel.id] = view
 
 @bot.tree.command(name="역할생성", description="파티 기능에 필요한 티어/포지션/모드 역할들을 생성합니다.")
 @app_commands.checks.has_permissions(administrator=True)  # ✅ 관리자 권한 체크
@@ -214,6 +216,25 @@ async def 역할생성_error(interaction: discord.Interaction, error):
         )
     else:
         raise error
+    
+@bot.tree.command(name="파티리스트", description="현재 생성된 파티 목록을 확인합니다.")
+async def 파티리스트(interaction: discord.Interaction):
+    embed = discord.Embed(title="📋 현재 파티 목록", color=discord.Color.teal())
+    count = 0
+
+    for channel_id, view in party_views.items():
+        if isinstance(view, PartyJoinView):
+            leader_name = view.leader.display_name
+            current = len(view.players)
+            total = view.max_players
+            mode = view.모드
+            embed.add_field(name=f"🎮 {mode} | 리더: {leader_name}", value=f"👥 인원: {current}/{total}", inline=False)
+            count += 1
+
+    if count == 0:
+        await interaction.response.send_message("❌ 현재 생성된 파티가 없습니다.", ephemeral=True)
+    else:
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 keep_alive()
 # 봇 실행
