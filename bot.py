@@ -5,6 +5,7 @@ from discord.ui import View, Button
 from dotenv import load_dotenv
 import os
 from typing import List, Optional
+from discord import Interaction
 from keep_alive import keep_alive
 
 # 환경 변수에서 토큰 불러오기
@@ -54,6 +55,11 @@ class PartyJoinView(View):
         self.close_button = Button(label="파티 종료", style=discord.ButtonStyle.danger)
         self.close_button.callback = self.end_party
         self.add_item(self.close_button)
+
+        # ▶ 나가기 버튼 추가
+        self.leave_button = Button(label="참여 취소", style=discord.ButtonStyle.secondary)
+        self.leave_button.callback = self.leave_party
+        self.add_item(self.leave_button)
 
     async def join_party(self, interaction: discord.Interaction):
         user = interaction.user
@@ -123,6 +129,30 @@ class PartyJoinView(View):
                 await self.voice_channel.delete()
             except Exception:
                 pass
+    
+    async def leave_party(self, interaction: discord.Interaction):
+        user = interaction.user
+
+        if user not in self.players:
+            await interaction.response.send_message("⚠️ 파티에 참여 중이 아닙니다.", ephemeral=True)
+            return
+
+        if user == self.leader:
+            await interaction.response.send_message("⚠️ 리더는 '파티 종료' 버튼을 사용해주세요.", ephemeral=True)
+            return
+
+        self.players.remove(user)
+        self.join_button.label = f"참여 ({len(self.players)}/{self.max_players})"
+
+        # 음성 채널 권한 제거
+        if self.voice_channel:
+            try:
+                await self.voice_channel.set_permissions(user, overwrite=None)
+            except Exception:
+                pass
+
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send(f"🚪 {user.mention}님이 파티에서 나갔습니다.", ephemeral=True)
 
 @app_commands.choices(현재티어=티어옵션, 게임모드=모드옵션)
 @bot.tree.command(name="파티생성", description="현재 티어와 포지션을 기반으로 파티를 생성합니다.")
