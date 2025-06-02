@@ -108,6 +108,9 @@ def add_scrim_commands(bot: commands.Bot):
             if not custom_id:
                 await interaction.response.send_message("❌ 엑셀 파일에 '식별ID' 항목이 필요합니다.", ephemeral=True)
                 return
+            if custom_id in scrim_profiles:
+                await interaction.response.send_message(f"❌ 이미 '{custom_id}' ID의 팀 정보가 등록되어 있습니다. 다른 식별ID를 사용해주세요.", ephemeral=True)
+                return
             scrim_profiles[custom_id] = profile
             await interaction.response.send_message(f"✅ 팀 정보가 식별 ID `{custom_id}` 기준으로 저장되었습니다.", ephemeral=True)
         except Exception as e:
