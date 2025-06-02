@@ -114,14 +114,14 @@ def add_scrim_commands(bot: commands.Bot):
             await interaction.response.send_message(f"❌ 오류 발생: {e}", ephemeral=True)
 
     @bot.tree.command(name="스크림정보확인", description="스크림 팀 정보를 식별 ID로 확인합니다.")
-    @app_commands.describe(식별ID="해당 팀의 고유 식별 ID")
-    async def 스크림정보확인(interaction: Interaction, 식별ID: str):
+    @app_commands.describe(profile_id="해당 팀의 고유 식별 ID")
+    async def 스크림정보확인(interaction: Interaction, profile_id: str):
         try:
-            profile = scrim_profiles.get(식별ID)
+            profile = scrim_profiles.get(profile_id)
             if not profile:
                 await interaction.response.send_message("❌ 해당 ID로 등록된 팀 정보가 없습니다.", ephemeral=True)
                 return
-            embed = format_scrim_embed(profile, f"ID: {식별ID}")
+            embed = format_scrim_embed(profile, f"ID: {profile_id}")
             await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f"❌ 오류 발생: {e}", ephemeral=True)
