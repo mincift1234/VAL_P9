@@ -76,6 +76,21 @@ def format_scrim_embed(profile: Dict, guild_name: str) -> discord.Embed:
 
 def add_scrim_commands(bot: commands.Bot):
 
+    @bot.tree.command(name="스크림정보양식", description="스크림 정보 입력용 엑셀 템플릿을 다운로드합니다.")
+    async def 스크림정보양식(interaction: Interaction):
+        file_path = "scrim_template_pro.xlsx"
+        if not os.path.exists(file_path):
+            await interaction.response.send_message("❌ 템플릿 파일이 존재하지 않습니다.", ephemeral=True)
+            return
+
+        file = discord.File(file_path, filename="스크림정보양식.xlsx")
+        await interaction.response.send_message(
+        content="📎 아래 템플릿을 작성해 `/스크림정보업로드` 명령어로 다시 업로드해주세요.",
+        file=file,
+        ephemeral=True
+    )
+
+
     @bot.tree.command(name="스크림정보업로드", description="스크림 팀 정보를 업로드하고 저장합니다.")
     async def 스크림정보업로드(interaction: Interaction, 파일: discord.Attachment):
         if not 파일.filename.endswith(".xlsx"):
@@ -140,3 +155,4 @@ def add_scrim_commands(bot: commands.Bot):
             await interaction.response.send_message(f"📋 요청됨: {msg} (from {from_id})", ephemeral=True)
         else:
             await interaction.response.send_message("❌ 요청이 없습니다.", ephemeral=True)
+
