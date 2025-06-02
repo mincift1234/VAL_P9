@@ -267,5 +267,9 @@ async def 파티리스트(interaction: discord.Interaction):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 keep_alive()
+
+from scrim_system import add_scrim_commands
+add_scrim_commands(bot)
+
 # 봇 실행
 bot.run(TOKEN)
